@@ -80,8 +80,7 @@ class Module(ModuleManager.BaseModule):
             arrivals = utils.http.request(URL_STOP_ARRIVALS % station["id"],
                 json=True)
             destinations = collections.OrderedDict()
-            now = utils.datetime_utcnow().replace(second=0, microsecond=0)
-            print(now.isoformat())
+            now = utils.datetime_utcnow().replace(microsecond=0)
 
             arrivals = sorted(arrivals.data, key=lambda a: a["expectedArrival"])
             for train in arrivals:
@@ -92,8 +91,7 @@ class Module(ModuleManager.BaseModule):
                         arrival = "Due"
                     else:
                         arrival = "In %s" % utils.to_pretty_time(
-                            (arrival-now).total_seconds(), max_units=1,
-                            minimum_unit=utils.UNIT_MINUTE)
+                            (arrival-now).total_seconds(), max_units=1)
 
                     destinations[destination] = "%s (%s)" % (
                         train["towards"], arrival)
