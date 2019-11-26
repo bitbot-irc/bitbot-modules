@@ -22,10 +22,10 @@ class Module(ModuleManager.BaseModule):
                 event["server"].get_setting("check-urls", False)):
             url = match.group(0)
             page = utils.http.request(URL_VIRUSTOTAL, get_params={
-                "apikey": self.bot.config["virustotal-api-key"],
-                "resource": url}, json=True)
+                "apikey": self.bot.config["virustotal-api-key"], "resource": url
+                }).json()
 
-            if page and page.data.get("positives", 0) > 1:
+            if page and page.get("positives", 0) > 1:
                 if event["channel"].get_setting("check-urls-kick", False):
                     event["channel"].send_kick(event["user"].nickname,
                         "Don't send malicious URLs!")

@@ -26,14 +26,14 @@ class Module(ModuleManager.BaseModule):
     @utils.kwarg("help", "Show status of Tube lines")
     @utils.kwarg("usage", "[line]")
     def line(self, event):
-        lines = utils.http.request(URL_LINE, json=True)
+        lines = utils.http.request(URL_LINE).json()
 
         if event["args_split"]:
             line_query = event["args"].strip().lower()
             line_query = LINES.get(line_query, line_query)
 
             found = None
-            for line in lines.data:
+            for line in lines:
                 if line["id"] == line_query:
                     found = line
                     break
@@ -50,7 +50,7 @@ class Module(ModuleManager.BaseModule):
         else:
             good = []
             bad = []
-            for line in lines.data:
+            for line in lines:
                 status = line["lineStatuses"][0]
                 if status["statusSeverity"] == 10:
                     good.append(line["name"])
@@ -73,16 +73,17 @@ class Module(ModuleManager.BaseModule):
     def stop(self, event):
         query = event["args"].strip()
         station = utils.http.request(
-            URL_STOP_SEARCH % urllib.parse.quote(query), json=True)
+            URL_STOP_SEARCH % urllib.parse.quote(query)).json()
 
-        if station.data["matches"]:
-            station = station.data["matches"][0]
-            arrivals = utils.http.request(URL_STOP_ARRIVALS % station["id"],
-                json=True)
+        if station["matches"]:
+            station = station["matches"][0]
+            arrivals = utils.http.request(
+                URL_STOP_ARRIVALS % station["id"]).json()
+
             destinations = collections.OrderedDict()
             now = utils.datetime_utcnow().replace(microsecond=0)
 
-            arrivals = sorted(arrivals.data, key=lambda a: a["expectedArrival"])
+            arrivals = sorted(arrivals, key=lambda a: a["expectedArrival"])
             for train in arrivals:
                 destination = train["destinationNaptanId"]
                 if not destination in destinations:

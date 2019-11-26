@@ -18,18 +18,18 @@ class Module(ModuleManager.BaseModule):
         if not cve_id.startswith("CVE-"):
             cve_id = "CVE-%s" % cve_id
 
-        page = utils.http.request(URL_CVE % cve_id, json=True)
+        page = utils.http.request(URL_CVE % cve_id).json()
 
-        if page and page.data:
-            cve_id = page.data["id"]
+        if page:
+            cve_id = page["id"]
 
-            published = "%sZ" % page.data["Published"].rsplit(".", 1)[0]
+            published = "%sZ" % page["Published"].rsplit(".", 1)[0]
             published = datetime.datetime.strptime(published,
                 utils.ISO8601_PARSE)
             published = datetime.datetime.strftime(published, "%Y-%m-%d")
 
-            rank = page.data["cvss"]
-            summary = page.data["summary"]
+            rank = page["cvss"]
+            summary = page["summary"]
 
             event["stdout"].write("%s, %s (%s): %s" %
                 (cve_id, published, rank, summary))

@@ -11,11 +11,11 @@ class Module(ModuleManager.BaseModule):
     _name = "ISBN"
 
     def get_book(self, query, event):
-        page = utils.http.request(URL_GOOGLEBOOKS, get_params={
-            "q": query, "country": "us"}, json=True)
+        page = utils.http.request(URL_GOOGLEBOOKS,
+            get_params={"q": query, "country": "us"}).json()
         if page:
-            if page.data["totalItems"] > 0:
-                book = page.data["items"][0]["volumeInfo"]
+            if page["totalItems"] > 0:
+                book = page["items"][0]["volumeInfo"]
                 title = book["title"]
                 sub_title = (", %s" % book.get("subtitle")
                     ) if book.get("subtitle") else ""

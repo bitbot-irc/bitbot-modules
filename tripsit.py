@@ -8,8 +8,7 @@ class Module(ModuleManager.BaseModule):
     _name = "tripsit"
 
     def _get_drug(self, name):
-        return utils.http.request(URL_DRUG, get_params={"name": name},
-            json=True)
+        return utils.http.request(URL_DRUG, get_params={"name": name}).json()
 
     @utils.hook("received.command.drug", min_args=1)
     @utils.kwarg("help", "Show information about a given drug")
@@ -17,9 +16,9 @@ class Module(ModuleManager.BaseModule):
     def drug(self, event):
         drug = self._get_drug(event["args_split"][0])
         if drug:
-            if not drug.data["err"]:
-                pretty_name = drug.data["data"][0]["pretty_name"]
-                drug = drug.data["data"][0]["properties"]
+            if not drug["err"]:
+                pretty_name = drug["data"][0]["pretty_name"]
+                drug = drug["data"][0]["properties"]
                 if len(event["args_split"]) > 1:
                     category = event["args_split"][1].lower()
                     if category in drug:
@@ -44,11 +43,11 @@ class Module(ModuleManager.BaseModule):
     @utils.kwarg("usage", "<drugA> <drugB>")
     def combo(self, event):
         combo = utils.http.request(URL_COMBO, get_params=
-            {"drugA":event["args_split"][0], "drugB": event["args_split"][1]},
-            json=True)
+            {"drugA":event["args_split"][0], "drugB": event["args_split"][1]}
+            ).json()
         if combo:
-            if not combo.data["err"] and combo.data["data"][0]:
-                data = combo.data["data"][0]
+            if not combo["err"] and combo["data"][0]:
+                data = combo["data"][0]
                 drug_a = data["interactionCategoryA"]
                 drug_b = data["interactionCategoryB"]
                 interaction = data["status"]
