@@ -24,7 +24,6 @@ class Module(ModuleManager.BaseModule):
     def message(self, event):
         if event["target"].get_setting("check-urls",
                 event["server"].get_setting("check-urls", False)):
-            event.eat()
 
             url = utils.http.url_sanitise(event["match"].group(0))
             page = utils.http.request(URL_VIRUSTOTAL, get_params={
@@ -32,6 +31,7 @@ class Module(ModuleManager.BaseModule):
                 }).json()
 
             if page and page.get("positives", 0) > 1:
+                event.eat()
                 if event["target"].get_setting("check-urls-kick", False):
                     event["target"].send_kick(event["user"].nickname,
                         "Don't send malicious URLs!")
