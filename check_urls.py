@@ -1,6 +1,7 @@
 #--depends-on commands
 #--depends-on config
 #--require-config virustotal-api-key
+# ^ get API key from https://www.virustotal.com/en/documentation/public-api/
 
 import re
 from src import ModuleManager, utils
