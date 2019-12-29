@@ -1,4 +1,6 @@
 #--depends-on commands
+#--require-config tfl-api-id
+#--require-config tfl-api-key
 
 import collections, urllib.parse
 from src import ModuleManager, utils
@@ -21,12 +23,16 @@ BAD_COLOR = utils.irc.color("Issues", utils.consts.ORANGE)
 class Module(ModuleManager.BaseModule):
     _name = "TFL"
 
+    def _get(self, url):
+        return utils.http.request(url, get_params={
+            "app_id": self.bot.config["tfl-api-id"],
+            "app_key": self.bot.config["tfl-api-key"]}).json()
 
     @utils.hook("received.command.tubeline")
     @utils.kwarg("help", "Show status of Tube lines")
     @utils.kwarg("usage", "[line]")
     def line(self, event):
-        lines = utils.http.request(URL_LINE).json()
+        lines = self._get(URL_LINE)
 
         if event["args_split"]:
             line_query = event["args"].strip().lower()
@@ -72,13 +78,11 @@ class Module(ModuleManager.BaseModule):
     @utils.kwarg("usage", "<station>")
     def stop(self, event):
         query = event["args"].strip()
-        station = utils.http.request(
-            URL_STOP_SEARCH % urllib.parse.quote(query)).json()
+        station = self._get(URL_STOP_SEARCH % urllib.parse.quote(query))
 
         if station["matches"]:
             station = station["matches"][0]
-            arrivals = utils.http.request(
-                URL_STOP_ARRIVALS % station["id"]).json()
+            arrivals = self._get(URL_STOP_ARRIVALS % station["id"])
 
             destinations = collections.OrderedDict()
             now = utils.datetime_utcnow().replace(microsecond=0)
