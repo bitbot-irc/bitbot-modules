@@ -45,7 +45,7 @@ class Module(ModuleManager.BaseModule):
                     break
             if found:
                 status = found["lineStatuses"][0]
-                reason = None
+                reason = ""
                 if "reason" in status:
                     reason = " (%s)" % status["reason"].strip()
 
