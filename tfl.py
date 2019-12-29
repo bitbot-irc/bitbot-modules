@@ -86,17 +86,18 @@ class Module(ModuleManager.BaseModule):
             arrivals = self._get(URL_STOP_ARRIVALS % station["id"])
 
             destinations = collections.OrderedDict()
-            now = utils.datetime_utcnow().replace(microsecond=0)
+            now = utils.datetime.utcnow().replace(microsecond=0)
 
             arrivals = sorted(arrivals, key=lambda a: a["expectedArrival"])
             for train in arrivals:
                 destination = train["destinationNaptanId"]
                 if not destination in destinations:
-                    arrival = utils.iso8601_parse(train["expectedArrival"])
+                    arrival = utils.datetime.iso8601_parse(
+                        train["expectedArrival"])
                     if now >= arrival:
                         arrival = "Due"
                     else:
-                        arrival = "In %s" % utils.to_pretty_time(
+                        arrival = "In %s" % utils.datetime.to_pretty_time(
                             (arrival-now).total_seconds(), max_units=1)
 
                     destinations[destination] = "%s (%s)" % (
