@@ -75,7 +75,7 @@ class Module(ModuleManager.BaseModule):
 
     @utils.hook("received.command.idose")
     @utils.kwarg("min_args", 2)
-    @utils.kwarg("usage", "<drug> [dose] [method]")
+    @utils.kwarg("usage", "<dose> <drug> [method]")
     def idose(self, event):
         dose = event["args_split"][0]
 
