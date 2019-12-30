@@ -4,6 +4,20 @@ URL_DRUG = "http://tripbot.tripsit.me/api/tripsit/getDrug"
 URL_COMBO = "http://tripbot.tripsit.me/api/tripsit/getInteraction"
 URL_WIKI = "http://drugs.tripsit.me/%s"
 
+METHODS = {
+    "iv": "IV",
+    "shot": "IV",
+
+    "im": "IM",
+
+    "oral": "Oral",
+
+    "insufflated": "Insufflated",
+    "snorted": "Insufflated",
+
+    "smoked": "Smoked"
+}
+
 class Module(ModuleManager.BaseModule):
     _name = "tripsit"
 
@@ -59,3 +73,57 @@ class Module(ModuleManager.BaseModule):
             raise utils.EventsResultsError()
 
 
+    @utils.hook("received.command.idose")
+    @utils.kwarg("min_args", 2)
+    @utils.kwarg("usage", "<drug> [dose] [method]")
+    def idose(self, event):
+        dose = event["args_split"][0]
+
+        drug_name = event["args_split"][1].lower()
+        drug = self._get_drug(drug_name)
+        if drug["err"]:
+            raise utils.EventError("Unknown drug")
+        drug = drug["data"][0]
+
+        method = None
+        drug_name = drug["pretty_name"]
+        drug_and_method = drug_name
+        if len(event["args_split"]) > 2:
+            method = METHODS.get(event["args_split"][2].lower())
+            drug_and_method = "%s via %s" % (drug_and_method, method)
+
+        onset = None
+        if "formatted_onset" in drug:
+            if method in drug["formatted_onset"]:
+                onset = drug["formatted_onset"][method]
+            elif "value" in drug["formatted_onset"]:
+                onset = drug["formatted_onset"]["value"]
+
+        now = utils.datetime.utcnow()
+        event["user"].set_setting("idose",
+            [drug_name, dose, method, utils.datetime.iso8601_format(now)])
+
+        human_time = self.exports.get_one("time-localise")(event["user"], now)
+
+        out = "Dosed %s of %s at %s" % (dose, drug_and_method, human_time)
+        if not onset == None:
+            out += ". You should start feeling effects %s from now" % onset
+        event["stdout"].write(out)
+
+    @utils.hook("received.command.lastdose")
+    def lastdose(self, event):
+        lastdose = event["user"].get_setting("idose", None)
+        if lastdose == None:
+            raise utils.EventError("%s: No last dose saved for you"
+                % event["user"].nickname)
+
+        drug_and_method = lastdose[0]
+        if lastdose[2]:
+            drug_and_method = "%s via %s" % (lastdose[0], lastdose[2])
+
+        dose = lastdose[1]
+        time = self.exports.get_one("time-localise")(
+            event["user"], utils.datetime.iso8601_parse(lastdose[3]))
+
+        event["stdout"].write("%s: You dosed %s of %s at %s" % (
+            event["user"].nickname, dose, drug_and_method, time))
