@@ -98,6 +98,7 @@ class Module(ModuleManager.BaseModule):
                 onset = drug["formatted_onset"][method]
             elif "value" in drug["formatted_onset"]:
                 onset = drug["formatted_onset"]["value"]
+            onset = "%s %s" % (onset, drug["formatted_onset"]["_unit"])
 
         now = utils.datetime.utcnow()
         event["user"].set_setting("idose",
