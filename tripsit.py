@@ -109,7 +109,7 @@ class Module(ModuleManager.BaseModule):
         out = "Dosed %s of %s at %s" % (dose, drug_and_method, human_time)
         if not onset == None:
             out += ". You should start feeling effects %s from now" % onset
-        event["stdout"].write(out)
+        event["stdout"].write("%s: %s" % (event["user"].nickname, out))
 
     @utils.hook("received.command.lastdose")
     def lastdose(self, event):
