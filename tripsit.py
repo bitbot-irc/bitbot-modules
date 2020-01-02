@@ -79,26 +79,29 @@ class Module(ModuleManager.BaseModule):
     def idose(self, event):
         dose = event["args_split"][0]
 
-        drug_name = event["args_split"][1].lower()
-        drug = self._get_drug(drug_name)
-        if drug["err"]:
-            raise utils.EventError("Unknown drug")
-        drug = drug["data"][0]
-
+        drug_name = event["args_split"][1]
         method = None
-        drug_name = drug["pretty_name"]
-        drug_and_method = drug_name
-        if len(event["args_split"]) > 2:
-            method = METHODS.get(event["args_split"][2].lower())
-            drug_and_method = "%s via %s" % (drug_and_method, method)
-
         onset = None
-        if "formatted_onset" in drug:
-            if method in drug["formatted_onset"]:
-                onset = drug["formatted_onset"][method]
-            elif "value" in drug["formatted_onset"]:
-                onset = drug["formatted_onset"]["value"]
-            onset = "%s %s" % (onset, drug["formatted_onset"]["_unit"])
+        drug = self._get_drug(drug_name)
+        if not drug["err"]:
+            drug = drug["data"][0]
+            drug_name = drug["pretty_name"]
+            if len(event["args_split"]) > 2:
+                method = METHODS.get(event["args_split"][2].lower(),
+                    event["args_split"][2].title())
+
+            if "formatted_onset" in drug:
+                if method in drug["formatted_onset"]:
+                    onset = drug["formatted_onset"][method]
+                elif "value" in drug["formatted_onset"]:
+                    onset = drug["formatted_onset"]["value"]
+
+                if onset:
+                    onset = "%s %s" % (onset, drug["formatted_onset"]["_unit"])
+
+        drug_and_method = drug_name
+        if not method == None:
+            drug_and_method = "%s via %s" % (drug_and_method, method)
 
         now = utils.datetime.utcnow()
         event["user"].set_setting("idose",
