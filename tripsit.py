@@ -39,7 +39,7 @@ class Module(ModuleManager.BaseModule):
                         data = drug[category]
                         if isinstance(data, list):
                             data = ", ".join(data)
-                        event["stdout"].write("%s %s: %s (%s)" % (
+                        event["stdout"].write("%s %s: %s - %s" % (
                             pretty_name, category, data, URL_WIKI % pretty_name))
                     else:
                         event["stderr"].write("Unknown category '%s'" % category)
