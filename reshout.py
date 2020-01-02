@@ -11,21 +11,17 @@ class Module(ModuleManager.BaseModule):
     @utils.kwarg("pattern", re.compile(".*"))
     def message(self, event):
         if event["target"].get_setting("reshout", False):
-            shout = event["message"]
-            normalised_shout = "".join(shout.split())
-            for char in string.punctuation:
-                normalised_shout = normalised_shout.replace(char, "")
+            shout = "".join(event["message"].split())
 
-            if not len(normalised_shout) > 20:
-                return
-
+            total = 0
             i = 0
-            for char in normalised_shout:
-                if char.isupper():
-                    i += 1
+            for char in shout:
+                if char.isalnum():
+                    total += 1
+                    if char.isupper():
+                        i += 1
 
-            ratio = i/len(normalised_shout)
-            if ratio > 0.8:
+            if total >= 20 and (i/total) >= 0.8:
                 shouts = event["target"].get_setting("shouts", [])
                 if shouts:
                     event["target"].send_message("%s: %s" %
