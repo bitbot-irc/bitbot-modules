@@ -11,11 +11,9 @@ class Module(ModuleManager.BaseModule):
     @utils.kwarg("pattern", re.compile(".*"))
     def message(self, event):
         if event["target"].get_setting("reshout", False):
-            shout = "".join(event["message"].split())
-
             total = 0
             i = 0
-            for char in shout:
+            for char in event["message"]:
                 if char.isalnum():
                     total += 1
                     if char.isupper():
@@ -27,5 +25,5 @@ class Module(ModuleManager.BaseModule):
                     event["target"].send_message("%s: %s" %
                         (event["user"].nickname, random.choice(shouts)))
                 if not event["message"] in shouts:
-                    shouts.append(shout)
+                    shouts.append(event["message"])
                     event["target"].set_setting("shouts", shouts)
