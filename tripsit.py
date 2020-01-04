@@ -93,7 +93,7 @@ class Module(ModuleManager.BaseModule):
                     [event["args_split"][2].title()])
 
             if "formatted_onset" in drug:
-                match = set(method)&set(drug["formatted_onset"].keys())
+                match = set(method or [])&set(drug["formatted_onset"].keys())
                 if match:
                     onset = drug["formatted_onset"][list(match)[0]]
                 elif "value" in drug["formatted_onset"]:
