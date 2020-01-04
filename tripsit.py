@@ -4,18 +4,20 @@ URL_DRUG = "http://tripbot.tripsit.me/api/tripsit/getDrug"
 URL_COMBO = "http://tripbot.tripsit.me/api/tripsit/getInteraction"
 URL_WIKI = "http://drugs.tripsit.me/%s"
 
+INSUFFLATED = ["Insufflated", "Insufflated-IR", "Insufflated-XR"]
+
 METHODS = {
-    "iv": "IV",
-    "shot": "IV",
+    "iv": ["IV"],
+    "shot": ["IV"],
 
-    "im": "IM",
+    "im": ["IM"],
 
-    "oral": "Oral",
+    "oral": ["Oral", "Oral-IR", "Oral-XR"],
 
-    "insufflated": "Insufflated",
-    "snorted": "Insufflated",
+    "insufflated": INSUFFLATED,
+    "snorted": INSUFFLATED,
 
-    "smoked": "Smoked"
+    "smoked": ["Smoked"]
 }
 
 class Module(ModuleManager.BaseModule):
@@ -88,11 +90,12 @@ class Module(ModuleManager.BaseModule):
             drug_name = drug["pretty_name"]
             if len(event["args_split"]) > 2:
                 method = METHODS.get(event["args_split"][2].lower(),
-                    event["args_split"][2].title())
+                    [event["args_split"][2].title()])
 
             if "formatted_onset" in drug:
-                if method in drug["formatted_onset"]:
-                    onset = drug["formatted_onset"][method]
+                match = set(method)&set(drug["formatted_onset"].keys())
+                if match:
+                    onset = drug["formatted_onset"][list(match)[0]]
                 elif "value" in drug["formatted_onset"]:
                     onset = drug["formatted_onset"]["value"]
 
@@ -101,7 +104,7 @@ class Module(ModuleManager.BaseModule):
 
         drug_and_method = drug_name
         if not method == None:
-            drug_and_method = "%s via %s" % (drug_and_method, method)
+            drug_and_method = "%s via %s" % (drug_and_method, method[0])
 
         now = utils.datetime.utcnow()
         event["user"].set_setting("idose",
