@@ -82,29 +82,36 @@ class Module(ModuleManager.BaseModule):
         dose = event["args_split"][0]
 
         drug_name = event["args_split"][1]
-        method = None
+        method = event["args_split"][2]
+        found_method = False
         onset = None
         drug = self._get_drug(drug_name)
         if not drug["err"]:
             drug = drug["data"][0]
             drug_name = drug["pretty_name"]
+            methods = [method.lower()]
             if len(event["args_split"]) > 2:
-                method = METHODS.get(event["args_split"][2].lower(),
-                    [event["args_split"][2].title()])
+                methods = METHODS.get(methods[0], methods)
 
             if "formatted_onset" in drug:
-                match = set(method or [])&set(drug["formatted_onset"].keys())
+                match = list(set(methods or [])&
+                    set(drug["formatted_onset"].keys()))
                 if match:
-                    onset = drug["formatted_onset"][list(match)[0]]
+                    onset = drug["formatted_onset"][match[0]]
+                    found_method = True
                 elif "value" in drug["formatted_onset"]:
                     onset = drug["formatted_onset"]["value"]
+                method = (match or [method])[0]
 
                 if onset:
                     onset = "%s %s" % (onset, drug["formatted_onset"]["_unit"])
 
+        if not found_method:
+            method = method.title()
+
         drug_and_method = drug_name
         if not method == None:
-            drug_and_method = "%s via %s" % (drug_and_method, method[0])
+            drug_and_method = "%s via %s" % (drug_and_method, method)
 
         now = utils.datetime.utcnow()
         event["user"].set_setting("idose",
