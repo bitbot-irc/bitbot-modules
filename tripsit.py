@@ -136,8 +136,10 @@ class Module(ModuleManager.BaseModule):
             drug_and_method = "%s via %s" % (lastdose[0], lastdose[2])
 
         dose = lastdose[1]
-        time = self.exports.get_one("time-localise")(
-            event["user"], utils.datetime.iso8601_parse(lastdose[3]))
 
-        event["stdout"].write("%s: You dosed %s of %s at %s" % (
-            event["user"].nickname, dose, drug_and_method, time))
+        now = utils.datetime.utcnow()
+        since = (now-utils.datetime.iso8601_parse(lastdose[3])).total_seconds()
+        since = utils.datetime.to_pretty_time(since, max_units=2)
+
+        event["stdout"].write("%s: You dosed %s of %s %s ago" % (
+            event["user"].nickname, dose, drug_and_method, since))
