@@ -6,6 +6,23 @@ from src import ModuleManager, utils
 @utils.export("channelset", utils.BoolSetting("reshout",
     "Whether or not to save shouted things and shout random saved things back"))
 class Module(ModuleManager.BaseModule):
+    def on_load(self):
+        if not self.bot.database.has_table("reshout"):
+            self.bot.database.execute("""
+                CREATE TABLE reshout (channel_id INTEGER, shout TEXT,
+                FOREIGN KEY (channel_id) REFERENCES channels(channel_id),
+                PRIMARY KEY (channel_id, shout))""")
+
+    def _add_shout(self, channel, shout):
+        self.bot.database.execute(
+            "INSERT OR IGNORE INTO reshout (channel_id, shout) VALUES (?, ?)",
+            [channel.id, shout])
+
+    def _random_shout(self, channel):
+        return (self.bot.database.execute_fetchone("""
+            SELECT shout FROM reshout WHERE channel_id=?
+            ORDER BY RANDOM() LIMIT 1""", [channel.id]) or [None])[0]
+
     @utils.hook("command.regex")
     @utils.kwarg("command", "reshout")
     @utils.kwarg("pattern", re.compile(".*"))
@@ -20,10 +37,8 @@ class Module(ModuleManager.BaseModule):
                         i += 1
 
             if total >= 20 and (i/total) >= 0.8:
-                shouts = event["target"].get_setting("shouts", [])
-                if shouts:
+                reshout = self._random_shout(event["target"])
+                if reshout:
                     event["target"].send_message("%s: %s" %
-                        (event["user"].nickname, random.choice(shouts)))
-                if not event["message"] in shouts:
-                    shouts.append(event["message"])
-                    event["target"].set_setting("shouts", shouts)
+                        (event["user"].nickname, reshout))
+                self._add_shout(event["target"], event["message"])
