@@ -144,3 +144,14 @@ class Module(ModuleManager.BaseModule):
 
         event["stdout"].write("%s: You dosed %s of %s %s ago" % (
             event["user"].nickname, dose, drug_and_method, since))
+
+    @utils.hook("received.command.undose")
+    def undose(self, event):
+        lastdose = event["user"].get_setting("idose", None)
+        if not lastdose == None:
+            event["user"].del_setting("idose")
+            event["stdout"].write("%s: Removed dose of %s" %
+                (event["user"].nickname, lastdose[0]))
+        else:
+            event["stderr"].write("%s: No last dose saved for you" %
+                event["user"].nickname)
