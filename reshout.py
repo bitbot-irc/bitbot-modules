@@ -9,9 +9,10 @@ class Module(ModuleManager.BaseModule):
     def on_load(self):
         if not self.bot.database.has_table("reshout"):
             self.bot.database.execute("""
-                CREATE TABLE reshout (channel_id INTEGER, shout TEXT,
+                CREATE TABLE reshout (id INTEGER PRIMARY KEY, channel_id INTEGER,
+                shout TEXT,
                 FOREIGN KEY (channel_id) REFERENCES channels(channel_id),
-                PRIMARY KEY (channel_id, shout))""")
+                UNIQUE (channel_id, shout))""")
 
     def _add_shout(self, channel, shout):
         self.bot.database.execute(
@@ -42,3 +43,35 @@ class Module(ModuleManager.BaseModule):
                     event["target"].send_message("%s: %s" %
                         (event["user"].nickname, reshout))
                 self._add_shout(event["target"], event["message"])
+
+    @utils.hook("received.command.unshout")
+    @utils.kwarg("help", "Remove a saved shout")
+    @utils.kwarg("usage", "[substring]")
+    @utils.kwarg("require_mode", "o")
+    @utils.kwarg("require_access", "unshout")
+    @utils.kwarg("permission", "unshout")
+    def unshout(self, event):
+        shout = None
+        success, error = None, None
+        if event["args"]:
+            success = "Deleted shout"
+            error = "Shout not found"
+
+            shout = self.bot.database.execute_fetchone("""
+                SELECT id, shout FROM reshout WHERE channel_id=?
+                AND shout LIKE ? ORDER BY id LIMIT 1""",
+                [event["target"].id, "%%%s%%" % event["args"]])
+        else:
+            success = "Deleted last shout"
+            error = "No saved shouts"
+
+            shout = self.bot.database.execute_fetchone("""
+                SELECT id, shout FROM reshout WHERE channel_id=?
+                ORDER BY id LIMIT 1""", [event["target"].id])
+        if shout:
+            id, shout = shout
+            self.bot.database.execute(
+                "DELETE FROM reshout WHERE id=?", [id])
+            event["stdout"].write(success)
+        else:
+            event["stderr"].write(error)
