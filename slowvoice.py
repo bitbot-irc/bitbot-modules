@@ -9,10 +9,6 @@ DELAY = 30 # 30 seconds
 @utils.export("channelset", utils.IntSetting("slowvoice-delay",
     "Set delay for slowvoice in seconds"))
 class Module(ModuleManager.BaseModule):
-    @utils.hook("timer.slowvoice")
-    def timer(self, event):
-        event["channel"].send_mode("+v", [event["user"].nickname])
-
     @utils.hook("new.channel")
     def new_channel(self, event):
         event["channel"]._slowvoice_timers = {}
@@ -21,9 +17,12 @@ class Module(ModuleManager.BaseModule):
     def on_join(self, event):
         if event["channel"].get_setting("slowvoice", False):
             delay = event["channel"].get_setting("slowvoice-delay", DELAY)
-            timer = self.timers.add("slowvoice", delay,
+            timer = self.timers.add("slowvoice", self._timer, delay,
                 channel=event["channel"], user=event["user"])
             event["channel"]._slowvoice_timers[event["user"]] = timer
+    def _timer(self, timer):
+        timer.kwargs["channel"].send_mode("+v",
+            [timer.kwargs["user"].nickname])
 
     def _cancel_timer(self, user, channel):
         if user in channel._slowvoice_timers:
