@@ -92,13 +92,14 @@ class Module(ModuleManager.BaseModule):
             for train in arrivals:
                 destination = train["destinationNaptanId"]
                 if not destination in destinations:
-                    arrival = utils.datetime.iso8601_parse(
+                    arrival = utils.datetime.parse.iso8601(
                         train["expectedArrival"])
                     if now >= arrival:
                         arrival = "Due"
                     else:
-                        arrival = "In %s" % utils.datetime.to_pretty_time(
+                        arrival = utils.datetime.format.to_pretty_time(
                             (arrival-now).total_seconds(), max_units=1)
+                        arrival = "In %s" % arrival
 
                     destinations[destination] = "%s (%s)" % (
                         train["towards"], arrival)

@@ -27,5 +27,5 @@ class Module(ModuleManager.BaseModule):
 
         self._del_timer(event["user"])
         elapsed = time.time()-timer
-        pretty = utils.to_pretty_time(int(elapsed))
+        pretty = utils.datetime.format.to_pretty_time(int(elapsed))
         event["stdout"].write("Timer stopped at %s" % pretty)

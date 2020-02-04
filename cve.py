@@ -1,6 +1,5 @@
 #--depends-on commands
 
-import datetime, json
 from src import ModuleManager, utils
 
 URL_CVE = "https://cve.circl.lu/api/cve/%s"
@@ -23,10 +22,8 @@ class Module(ModuleManager.BaseModule):
         if page:
             cve_id = page["id"]
 
-            published = "%sZ" % page["Published"].rsplit(".", 1)[0]
-            published = datetime.datetime.strptime(published,
-                utils.ISO8601_PARSE)
-            published = datetime.datetime.strftime(published, "%Y-%m-%d")
+            published = utils.datetime.format.date_human(
+                utils.datetime.parse.iso8601(page["Published"]))
 
             rank = page["cvss"]
             summary = page["summary"]
