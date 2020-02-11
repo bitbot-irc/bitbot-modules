@@ -89,23 +89,25 @@ class Module(ModuleManager.BaseModule):
         if not drug["err"]:
             drug = drug["data"][0]
             drug_name = drug["pretty_name"]
+            method_keys = ["value"]
+            methods = []
             if method:
                 methods = [method.lower()]
                 methods = METHODS.get(methods[0], methods)
+                method_keys += methods
 
-                if "formatted_onset" in drug:
-                    match = list(set(methods or [])&
-                        set(drug["formatted_onset"].keys()))
-                    if match:
-                        onset = drug["formatted_onset"][match[0]]
-                        found_method = True
-                    elif "value" in drug["formatted_onset"]:
-                        onset = drug["formatted_onset"]["value"]
-                    method = (match or [method])[0]
+            if "formatted_onset" in drug:
+                match = list(set(method_keys)&
+                    set(drug["formatted_onset"].keys()))
+                if match:
+                    onset = drug["formatted_onset"][match[0]]
+                    found_method = True
+                    if match[0] in methods:
+                        method = (match or [method])[0]
 
-                    if onset:
-                        onset = "%s %s" % (
-                            onset, drug["formatted_onset"]["_unit"])
+                if onset and "_unit" in drug["formatted_onset"]:
+                    onset = "%s %s" % (
+                        onset, drug["formatted_onset"]["_unit"])
 
         drug_and_method = drug_name
         if method:
