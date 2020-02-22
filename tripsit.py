@@ -1,5 +1,10 @@
 from src import ModuleManager, utils
 
+# This module is for the sole purpose of harm reduction.
+# I do not condone recreational drug usage but statistics persistently show
+# that information is the most effective way to minimise harm.
+# - jess (2020)
+
 URL_DRUG = "http://tripbot.tripsit.me/api/tripsit/getDrug"
 URL_COMBO = "http://tripbot.tripsit.me/api/tripsit/getInteraction"
 URL_WIKI = "http://drugs.tripsit.me/%s"
