@@ -125,7 +125,7 @@ class Module(ModuleManager.BaseModule):
         event["user"].set_setting("idose",
             [drug_name, dose, method, utils.datetime.format.iso8601(now)])
 
-        human_time = self.exports.get_one("time-localise")(event["user"], now)
+        human_time = self.exports.get("time-localise")(event["user"], now)
 
         out = "Dosed %s of %s at %s" % (dose, drug_and_method, human_time)
         if not onset == None:
