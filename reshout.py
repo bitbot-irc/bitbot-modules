@@ -7,21 +7,30 @@ from src import ModuleManager, utils
     "Whether or not to save shouted things and shout random saved things back"))
 class Module(ModuleManager.BaseModule):
     def on_load(self):
-        if not self.bot.database.has_table("reshout"):
+        if not self.bot.database.has_table("reshout-v2"):
             self.bot.database.execute("""
-                CREATE TABLE reshout (id INTEGER PRIMARY KEY, channel_id INTEGER,
-                shout TEXT,
+                CREATE TABLE reshout-v2 (
+                    id INTEGER PRIMARY KEY,
+                    channel_id INTEGER,
+                    shout TEXT,
+                    who TEXT,
+                    when TEXT
+                )
                 FOREIGN KEY (channel_id) REFERENCES channels(channel_id),
                 UNIQUE (channel_id, shout))""")
 
-    def _add_shout(self, channel, shout):
-        self.bot.database.execute(
-            "INSERT OR IGNORE INTO reshout (channel_id, shout) VALUES (?, ?)",
-            [channel.id, shout])
+    def _add_shout(self, channel, shout, who):
+        when = utils.datetime.format.iso8601_now()
+        self.bot.database.execute("""
+            INSERT OR IGNORE INTO
+            reshout-2 (channel_id, shout, who, when)
+            VALUES (?, ?)""", [channel.id, shout, who, when])
 
     def _random_shout(self, channel):
         return (self.bot.database.execute_fetchone("""
-            SELECT shout FROM reshout WHERE channel_id=?
+            SELECT shout, who, when
+            FROM reshout-v2
+            WHERE channel_id=?
             ORDER BY RANDOM() LIMIT 1""", [channel.id]) or [None])[0]
 
     @utils.hook("command.regex")
@@ -40,9 +49,14 @@ class Module(ModuleManager.BaseModule):
             if total >= 20 and (i/total) >= 0.8:
                 reshout = self._random_shout(event["target"])
                 if reshout:
+                    reshout, who, when = reshout
+                    event["target"]._last_shout = (who, when)
+
                     event["target"].send_message("%s: %s" %
                         (event["user"].nickname, reshout))
-                self._add_shout(event["target"], event["message"])
+
+                self._add_shout(event["target"], event["message"],
+                    event["user"].hostmask())
 
     @utils.hook("received.command.unshout")
     @utils.kwarg("help", "Remove a saved shout")
