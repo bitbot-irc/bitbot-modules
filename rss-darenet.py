@@ -1,7 +1,7 @@
 #--depends-on config
 #--depends-on shorturl
 
-import difflib, hashlib, time
+import difflib, hashlib, time, urllib.parse
 from src import ModuleManager, utils
 import feedparser
 
@@ -48,7 +48,8 @@ class Module(ModuleManager.BaseModule):
         timer.redo()
         hook_settings = self.bot.database.channel_settings.find_by_setting(
             "rss-hooks")
-        hooks = {}
+
+        all_urls = []
         for server_id, channel_name, urls in hook_settings:
             server = self.bot.get_server_by_id(server_id)
             if server and channel_name in server.channels:
@@ -56,15 +57,26 @@ class Module(ModuleManager.BaseModule):
                 for url in urls:
                     bindhost = channel.get_setting("rss-bindhost",
                         server.get_setting("rss-bindhost", None))
-
                     if url.startswith("www."):
                         url = url.replace("www.", "", 1)
 
-                    key = (url, bindhost)
-                    if not key in hooks:
-                        hooks[key] = []
+                    all_urls.append((server, channel, url, bindhost))
 
-                    hooks[key].append((server, channel))
+        https = set([])
+        hooks = {}
+        all_urls.sort(lambda u: u[2].startswith("https:"), reverse=True)
+        for server, channel, url, bindhost in all_urls:
+            parts = urllib.parse.urlparse(url)
+            if parts.scheme == "https":
+                https.add(parts.netloc)
+            elif parts.scheme == "http" and parts.netloc in https:
+                url = url.replace("http:", "https:", 1)
+
+            key = (url, bindhost)
+            if not key in hooks:
+                hooks[key] = []
+
+            hooks[key].append((server, channel))
 
         if not hooks:
             return
