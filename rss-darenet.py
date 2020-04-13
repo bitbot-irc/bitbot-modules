@@ -57,8 +57,6 @@ class Module(ModuleManager.BaseModule):
                 for url in urls:
                     bindhost = channel.get_setting("rss-bindhost",
                         server.get_setting("rss-bindhost", None))
-                    if url.startswith("www."):
-                        url = url.replace("www.", "", 1)
 
                     all_urls.append((server, channel, url, bindhost))
 
@@ -67,6 +65,9 @@ class Module(ModuleManager.BaseModule):
         all_urls.sort(lambda u: u[2].startswith("https:"), reverse=True)
         for server, channel, url, bindhost in all_urls:
             parts = urllib.parse.urlparse(url)
+            if parts.netloc.startswith("www."):
+                url = url.replace("www.", "", 1)
+
             if parts.scheme == "https":
                 https.add(parts.netloc)
             elif parts.scheme == "http" and parts.netloc in https:
