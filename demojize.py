@@ -18,6 +18,12 @@ class Module(ModuleManager.BaseModule):
                     format = "* %s %s"
                 else:
                     format = "<%s> %s"
-                event["stdout"].write(format % (event["user"].nickname,
-                    demojised))
 
+                out = format % (event["user"].nickname, demojised)
+                event["stdout"].write(out)
+
+    @utils.hook("received.command.demojize")
+    @utils.spec("!<message>string")
+    def command(self, event):
+        demojised = emoji.demojize(event["spec"][0])
+        event["stdout"].write("%s: %s" % (event["user"].nickname, demojised))
