@@ -176,7 +176,7 @@ class Module(ModuleManager.BaseModule):
             if lastdose[2]:
                 method, drug_and_method = lastdose[2], "%s via %s" % (lastdose[0], lastdose[2])
 
-            if lastdose[4] and not lastdose[4] == None:
+            if len(lastdose) > 4:
                 onset = lastdose[4]
             else:
                 onset = None
