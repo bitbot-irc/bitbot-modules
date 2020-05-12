@@ -22,7 +22,11 @@ METHODS = {
     "insufflated": INSUFFLATED,
     "snorted": INSUFFLATED,
 
-    "smoked": ["Smoked"]
+    "smoked": ["Smoked"],
+    "vaped": ["Smoked"],
+    "vaporized": ["Smoked"],
+    "vaporised": ["Smoked"],
+    "vaporization": ["Smoked"]
 }
 
 class Module(ModuleManager.BaseModule):
@@ -123,7 +127,7 @@ class Module(ModuleManager.BaseModule):
 
         now = utils.datetime.utcnow()
         event["user"].set_setting("idose",
-            [drug_name, dose, method, utils.datetime.format.iso8601(now)])
+            [drug_name, dose, method, utils.datetime.format.iso8601(now), onset])
 
         human_time = self.exports.get("time-localise")(event["user"], now)
 
@@ -162,3 +166,34 @@ class Module(ModuleManager.BaseModule):
         else:
             event["stderr"].write("%s: No last dose saved for you" %
                 event["user"].nickname)
+
+    @utils.hook("received.command.redose")
+    def redose(self, event):
+        lastdose = event["user"].get_setting("idose", None)
+        if not lastdose == None:
+            drug_name, dose, oldtime = lastdose[0], lastdose[1], lastdose[3]
+
+            if lastdose[2]:
+                method, drug_and_method = lastdose[2], "%s via %s" % (lastdose[0], lastdose[2])
+
+            if lastdose[4] and not lastdose[4] == None:
+                onset = lastdose[4]
+            else:
+                onset = None
+
+            now = utils.datetime.utcnow()
+
+            event["user"].set_setting("idose",
+                                      [drug_name, dose, method, utils.datetime.format.iso8601(now), onset])
+
+            since = (now - utils.datetime.parse.iso8601(lastdose[3])).total_seconds()
+            since = utils.datetime.format.to_pretty_time(since, max_units=2)
+            human_time = self.exports.get("time-localise")(event["user"], now)
+
+            out = "Re-dosed %s of %s at %s (last dose: %s)" % (dose, drug_and_method, human_time, since)
+            if not onset == None:
+                out += ". You should start feeling effects %s from now" % onset
+            event["stdout"].write("%s: %s" % (event["user"].nickname, out))
+        else:
+            raise utils.EventError("%s: No last dose saved for you"
+                                   % event["user"].nickname)
