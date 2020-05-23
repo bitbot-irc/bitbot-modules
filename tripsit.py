@@ -171,10 +171,10 @@ class Module(ModuleManager.BaseModule):
     def redose(self, event):
         lastdose = event["user"].get_setting("idose", None)
         if not lastdose == None:
-            drug_name, dose, oldtime = lastdose[0], lastdose[1], lastdose[3]
+            drug_name, dose, method, oldtime, drug_and_method = lastdose[0], lastdose[1], lastdose[2], lastdose[3], lastdose[0]
 
-            if lastdose[2]:
-                method, drug_and_method = lastdose[2], "%s via %s" % (lastdose[0], lastdose[2])
+            if method:
+                drug_and_method = "%s via %s" % (drug_name, method)
 
             if len(lastdose) > 4:
                 onset = lastdose[4]
