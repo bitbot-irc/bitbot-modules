@@ -1,5 +1,7 @@
 from src import ModuleManager, utils
 
+VOWELS = "aeiou"
+
 @utils.export("set", utils.Setting("species", "*sniffs at*", example="sandcat"))
 class Module(ModuleManager.BaseModule):
     _name = "Species"
@@ -20,8 +22,8 @@ class Module(ModuleManager.BaseModule):
 
         species = target_user.get_setting("species", None)
         if not species == None:
-            event["stdout"].write("%s is a %s" % (target_user.nickname,
-                species))
+            a_an = "an" if species[0].lower() in VOWELS else "a"
+            event["stdout"].write(f"{target_user.nickname} is {a_an} {species}")
         else:
             event["stderr"].write("%s has no species set" %
                 target_user.nickname)
