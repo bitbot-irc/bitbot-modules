@@ -23,7 +23,7 @@ class Module(ModuleManager.BaseModule):
                 event["stdout"].write(out)
 
     @utils.hook("received.command.demojize")
-    @utils.spec("!<message>string")
+    @utils.spec("!<message>lstring")
     def command(self, event):
         demojised = emoji.demojize(event["spec"][0])
         event["stdout"].write("%s: %s" % (event["user"].nickname, demojised))
