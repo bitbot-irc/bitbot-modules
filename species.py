@@ -21,9 +21,18 @@ class Module(ModuleManager.BaseModule):
                 raise utils.EventError("I don't know who %s is" % target_name)
 
         species = target_user.get_setting("species", None)
-        if not species == None:
-            a_an = "an" if species[0].lower() in VOWELS else "a"
-            event["stdout"].write(f"{target_user.nickname} is {a_an} {species}")
-        else:
+        if species == None:
             event["stderr"].write("%s has no species set" %
                 target_user.nickname)
+            return
+
+        species = species.strip()
+
+        # if `species` doesn't start with "a " or "an " then we'll make a
+        # best-effort guess at which to prepend based on whether the species
+        # starts with a vowel or not
+        if not species.startswith(("a ", "an ")):
+            a_an = "an " if species[0].lower() in VOWELS else "a "
+            species = a_an + species
+
+        event["stdout"].write(f"{target_user.nickname} is {species}")
